@@ -1,62 +1,73 @@
+const express = require("express");
+const app = express();
+const Cors = require("cors");
+const bodyParser = require("body-parser");
+const fileUpload = require("express-fileupload");
+require("./database");
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(fileUpload());
+app.use(express.static("files"));
+app.use(Cors());
+
+// Define All Routes file Here
+const userRoutes = require("./routes/user.routes")
+const categoryRoutes = require("./routes/category.routes")
+const subCategoryRoutes = require("./routes/subcategory.routes")
+const superAdminRoutes = require("./routes/superAdmin.routes")
+
+// Define All Routes Here
+app.use("/users", userRoutes)
+app.use("/category", categoryRoutes)
+app.use("/subcategory", subCategoryRoutes)
+app.use("/superAdmin", superAdminRoutes)
+// app.post("/insert-user", userController.insertUserController);
+// app.post("/login", userController.loginUsers);
+// app.post("/insert-catagory", userController.insertCatagory);
+// app.get("/get-catagorylist", userController.getCatagoryList);
+// app.post("/insert-subcatagory", userController.insertSubCatagory);
+// app.get("/get-colorlist", userController.getColorList);
+// app.post("/insert-color", userController.colorInsertController);
+// app.post("/insert-product", productController.insertProduct);
+// app.get("/get-product", productController.getProduct);
+// app.get("/get-subcatagorylist/:c_id", userController.getSubCategoryList);
+
+app.listen(8000, () => {
+	console.log("server started");
+});
+
 // const express = require("express");
 // const app = express();
+// const db = require("./database");
 // const bodyParser = require("body-parser");
-// const mongoose = require("mongoose");
-// const multer = require("multer");
-// const cors = require("cors");
-// const port = 5000;
-// const fs = require("fs");
-// const imageModel = require("./models");
-// app.use(cors());
+// const Cors = require("cors");
+// const userController = require("./controllers/user.control");
+// const subscriptionController = require("./controllers/subscription.controller");
+// const attributeController = require("./controllers/attributes.controller");
+// const productController = require("./controllers/product.controller");
+// const fileUpload = require("express-fileupload");
 
-// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(bodyParser.json());
-
-// mongoose
-//   .connect(
-//     "mongodb+srv://sahul:FEmG5ZQcSav3DndD@cluster0.alht5.mongodb.net/imageData?retryWrites=true&w=majority",
-//     { useNewUrlParser: true, useUnifiedTopology: true }
-//   )
-//   .then(() => console.log("connected successfully"))
-//   .catch((err) => console.log("it has an error", err));
-
-
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, "uploads");
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, file.originalname);
-//   },
+// app.use(fileUpload());
+// app.use(express.static("files"));
+// app.use(Cors());
+// app.get("/", function (req, res) {
+//   res.send("hi");
 // });
-
-// const upload = multer({ storage: storage });
-
-// app.post("/", upload.single("testImage"), (req, res) => {
-//   const saveImage =  imageModel({
-//     name: req.body.name,
-//     img: {
-//       data: fs.readFileSync("uploads/" + req.file.filename),
-//       contentType: "image/png",
-//     },
-//   });
-//   saveImage
-//     .save()
-//     .then((res) => {
-//       console.log("image is saved");
-//     })
-//     .catch((err) => {
-//       console.log(err, "error has occur");
-//     });
-//     res.send('image is saved')
-// });
-
-
-// app.get('/',async (req,res)=>{
-//   const allData = await imageModel.find()
-//   res.json(allData)
-// })
-
-// app.listen(port, () => {
-//   console.log("server running successfully");
-// });
+// app.get("/get-userlist", userController.getUserList);
+// app.get("/get-catagorylist", userController.getCatagoryList);
+// app.get("/get-color", attributeController.getColorList);
+// app.get("/get-size", attributeController.getSizeList);
+// app.get("/get-subcatagory/:c_id", userController.getSubCatagoryList);
+// app.post("/insert-user", userController.insertUserController);
+// app.patch("/update-user", userController.updateUserController);
+// app.post("/login", userController.loginUsers);
+// app.post("/insert-catagory", userController.insertCatagory);
+// app.post("/insert-subcatagory", userController.insertSubCatagory);
+// app.post("/insert-subscription", subscriptionController.insertSubscription);
+// app.delete("/delete-user", userController.deleteUser);
+// app.post("/insert-color", attributeController.colorInsertController);
+// app.post("/insert-size", attributeController.sizeInsertController);
+// app.post("/insert-product", productController.insertProduct);
