@@ -15,7 +15,7 @@ module.exports = {
 	createUser: async (req, res) => {
 		const { email, name, phone, password } = req.body;
 		try {
-			const userExists = await userSchema.findOne({ email });
+			const userExists = await userSchema.findOne({ email, isActive: false });
 			if (userExists) {
 				return res
 					.status(enums.HTTP_CODE.BAD_REQUEST)
@@ -55,7 +55,7 @@ module.exports = {
 	userLogin: async (req, res) => {
 		const { email, password } = req.body;
 		try {
-			const userData = await userSchema.findOne({ email });
+			const userData = await userSchema.findOne({ email }).populate("role");
 			if (!userData) {
 				return res
 					.status(enums.HTTP_CODE.OK)
@@ -72,6 +72,7 @@ module.exports = {
 			const data = {
 				id: userData._id,
 				email: userData.email,
+				role: userData.role.role
 			};
 			const token = jwt.sign(data, process.env.JWT_SECRET);
 			return res
@@ -97,7 +98,6 @@ module.exports = {
 				req.body,
 				{ new: true }
 			)
-			console.log("updateUser", updateUser)
 			return res
 				.status(enums.HTTP_CODE.OK)
 				.json({ success: true, message: messages.UPDATE_SUCCESSFULLY, user: updateUser });
@@ -164,11 +164,11 @@ module.exports = {
 			await userSchema.findByIdAndUpdate(
 				findUser._id,
 				{ $set: { otp: otp } },
-				{new: true}
+				{ new: true }
 			)
 			const maildata = {
 				to: email,
-				subject: "Animalll | Forgot your password",
+				subject: "Stagwood | Forgot your password",
 				otp: otp
 			}
 
@@ -329,6 +329,12 @@ module.exports = {
 				.status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
 				.json({ success: false, message: error.message });
 		}
+	},
+	uploadImage:async(req, res)=>{
+		const file = req.files.file?.data;
+		console.log(file)
+		let data = "data:" + req.files.file.mimetype + ";base64," + Buffer.from(file).toString('base64');
+		res.status(200).json({data});
 	}
 };
 
@@ -337,7 +343,8 @@ event.on('OTP expire', (user) => {
 		await userSchema.findByIdAndUpdate(
 			user._id,
 			{ $set: { otp: null } },
-			{new: true}
+			{ new: true }
 		)
 	}, 60000)
 })
+

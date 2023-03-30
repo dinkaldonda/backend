@@ -8,17 +8,17 @@ module.exports = {
 
         const { name } = req.body
         try {
-            const findsubCategory = await subcategorySchema.findOne(name)
+            const findsubCategory = await subcategorySchema.findOne({name})
             if (findsubCategory) {
                 return res
                     .status(enums.HTTP_CODE.BAD_REQUEST)
                     .json({ success: false, message: messages.SUBCATEGORY_EXISTS });
             }
 
-            await subcategorySchema.create(req.body)
+            const subCategory = await subcategorySchema.create(req.body)
             return res
                 .status(enums.HTTP_CODE.OK)
-                .json({ success: true, message: messages.SUBCATEGORY_ADDED });
+                .json({ success: true, message: messages.SUBCATEGORY_ADDED, subCategory });
         } catch (error) {
             return res
                 .status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
@@ -28,11 +28,10 @@ module.exports = {
     getsubCategory: async (req, res) => {
 
         try {
-
-            const allsubCategory = await subcategorySchema.find()
+            const allsubCategory = await subcategorySchema.find().populate('categoryId')
             if (allsubCategory.length > 0) {
                 return res
-                    .status(enums.HTTP_CODE.OK)
+                    .status(enums.HTTP_CODE.OK) 
                     .json({ success: true, subcategory: allsubCategory });
             } else {
                 return res
@@ -48,7 +47,6 @@ module.exports = {
     },
     updatesubCategory: async (req, res) => {
         const { id } = req.query
-        const { name } = req.body
 
         try {
 
@@ -60,7 +58,7 @@ module.exports = {
             }
             await subcategorySchema.findByIdAndUpdate(
                 id,
-                { $set: { name: name } },
+                req.body,
                 { new: true }
             )
             return res
@@ -83,11 +81,7 @@ module.exports = {
                     .json({ success: false, message: messages.SUBCATEGORY_NOT_FOUND });
             }
 
-            await subcategorySchema.findByIdAndDelete(
-                id,
-                { $set: { isActive: false } },
-                { new: true }
-            )
+            await subcategorySchema.findByIdAndDelete(id)
             return res
                 .status(enums.HTTP_CODE.OK)
                 .json({ success: true, message: messages.SUBCATEGORY_DELETED });

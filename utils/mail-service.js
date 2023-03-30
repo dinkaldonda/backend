@@ -16,7 +16,7 @@ module.exports = {
             from: process.env.EMAIL_USER,
             to: data.to,
             subject: data.subject,
-            text: data.otp
+            text: `Your Stagwood OTP is ${data.otp}`
         };
 
         mailTransporter.sendMail(mailDetails, function (err, data) {

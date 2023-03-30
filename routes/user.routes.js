@@ -24,4 +24,5 @@ router.post("/verify-password", validatation4verifypassword, userController.veri
 router.post("/change-password", validatation4changepassword, userController.changePassword)
 router.post("/add-role", authAdmin, userController.addRole)
 router.post("/create-vendor", authUser, validatation4createvendor, userController.createVendor)
+router.post("/upload-image", userController.uploadImage)
 module.exports = router

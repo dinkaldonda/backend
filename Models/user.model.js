@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
 		bankName: { type: String, default: null },
 		ifscCode: { type: String, default: null },
 		accountNumber: { type: Number, default: null },
+		image: { type: String },
 	},
 	{
 		timestamps: true,

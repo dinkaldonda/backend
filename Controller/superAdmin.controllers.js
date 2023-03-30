@@ -35,7 +35,7 @@ module.exports = {
         const { email, password } = req.body
 
         try {
-            const user = await userSchema.findOne({email}).populate("role")
+            const user = await userSchema.findOne({ email }).populate("role")
             if (!user) {
                 return res
                     .status(enums.HTTP_CODE.BAD_REQUEST)
@@ -50,13 +50,30 @@ module.exports = {
             }
 
             const data = {
-                _id: user._id,
-                role: user.role.role
+                id: user._id,
+                role: user.role.role,
+                email: user.email
             }
             const token = jwt.sign(data, process.env.JWT_SECRET);
             return res
                 .status(enums.HTTP_CODE.OK)
                 .json({ success: true, message: messages.LOGIN_SUCCESS, token, user: user });
+        } catch (error) {
+            return res
+                .status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
+                .json({ success: false, message: error.message });
+        }
+    },
+    getAllUser: async (req, res) => {
+        try {
+            const getUser = await userSchema.find().populate("role").lean()
+            let newUser = []
+            if (getUser.length > 0) {
+                newUser = getUser.filter((x) => x.role.role !== "superAdmin")
+            }
+            return res
+                .status(enums.HTTP_CODE.OK)
+                .json({ success: true, user: newUser, count: newUser.length });
         } catch (error) {
             return res
                 .status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)

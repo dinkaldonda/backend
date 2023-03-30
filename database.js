@@ -1,6 +1,5 @@
 const { createSuperAdmin } = require("./Controller/superAdmin.controllers")
 const mongoose = require("mongoose");
-
 mongoose.set("strictQuery", false);
 const db = mongoose.connect("mongodb://localhost:27017/wooden", async (error, Db) => {
     if (error) {

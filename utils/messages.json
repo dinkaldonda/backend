@@ -1,5 +1,6 @@
 {
 	"SIGNUP_SUCCESS": "Sign up successfully.",
+	"INTERNAL_SERVER_ERROR": "Internal Server Error.",
 	"LOGIN_SUCCESS":"Log in successfully.",
 	"EMAIL_EXISTS": "User already exists.",
 	"ROLE_NOT_FOUND": "Role not found.",
@@ -32,5 +33,25 @@
 	"COLOR_NOT_FOUND":"Color not found.",
 	"DELETE_COLOR":"Delete color successfully.",
 	"VENDOR_CREATED":"You are now a Vendor.",
-	"SUPER_ADMIN_CREATE":"Super Admin created successfully."
+	"SUPER_ADMIN_CREATE":"Super Admin created successfully.",
+	"PRODUCT_ADDED":"Product added successfully.",
+	"BLOG_ADDED":"Blog added successfully.",
+	"BLOG_UPDATED":"Blog updated successfully,",
+	"BLOG_DELETED":"Blog deleted successfully.",
+	"MATERIAL_EXISTS": "Material already exists.",
+	"MATERIAL_ADDED": "Material added successfully.",
+	"MATERIAL_UPDATED":"Material updated successfully.",
+	"MATERIAL_DELETED":"Material deleted successfully.",
+	"MATERIAL_NOT_FOUND":"Material not found.",
+	"INVALID_FILE_TYPE":"Invalid file type.",
+	"INVALID_FILE_SIZE":"Image size less then 1 MB.",
+	"IMAGE_REQUIRE":"Image is required.",
+	"SUCCESS":"Success",
+	"PRODUCT_NOT_FOUND":"Product not found",
+	"WISHLISTED_ADDED":"Added to Wishlist.",
+	"WISHLISTED_REMOVE":"Remove from Wishlist.",
+	"OUT_OF_STOCKS":"Product is out of stock",
+	"PRODUCT_REMOVE":"Product removed from cart successfully",
+	"PRODUCT_ADDED_CART":"Product added to cart successfully",
+	"PRODUCT_INCREMENT":"You have this item in your cart and we have increased the quantity by"
 }
