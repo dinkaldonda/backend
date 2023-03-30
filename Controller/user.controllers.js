@@ -169,7 +169,8 @@ module.exports = {
 			const maildata = {
 				to: email,
 				subject: "Stagwood | Forgot your password",
-				otp: otp
+				otp: otp,
+				name: findUser.name
 			}
 
 			mailService(maildata)
