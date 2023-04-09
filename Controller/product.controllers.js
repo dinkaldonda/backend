@@ -2,7 +2,7 @@ const productSchema = require("../Models/product.model")
 const categorySchema = require("../Models/catagory.model")
 const subcategorySchema = require("../Models/subcatagory.model")
 const addToCartSchema = require("../Models/addtocart.model")
-const paymentSchema = require("../Models/payment.model")
+const orderSchema = require("../Models/order.model")
 const enums = require("../utils/enums.json")
 const messages = require("../utils/messages.json")
 require("dotenv").config()
@@ -64,17 +64,17 @@ module.exports = {
 			criteria = { status: "Approved" }
 		}
 		const { min, max, letter } = req.body
-		if (min & max) {
+		if (letter && min >= 0 && max) {
+			criteria = { ...criteria, "subCategory.name": letter, price: { $gte: min, $lte: max } }
+		}
+		if (min >= 0 && max) {
 			criteria = { ...criteria, price: { $gte: min, $lte: max } }
 		}
 		if (letter) {
-			criteria = { ...criteria, name: letter }
+			criteria = { ...criteria, "subCategory.name": letter }
 		}
 		try {
 			const getProduct = await productSchema.aggregate([
-				{
-					'$match': criteria
-				},
 				{
 					'$lookup': {
 						'from': 'category',
@@ -100,8 +100,11 @@ module.exports = {
 						'preserveNullAndEmptyArrays': true
 					}
 				}, {
+					'$match': criteria
+				}, {
 					'$sort': {
-						'createdAt': -1
+						'createdAt': -1,
+						'price': -1
 					}
 				}
 			])
@@ -244,7 +247,6 @@ module.exports = {
 					.status(enums.HTTP_CODE.BAD_REQUEST)
 					.json({ success: false, message: messages.OUT_OF_STOCKS });
 			}
-			console.log(productQuantity)
 			if (cartProduct) {
 				console.log("exists")
 				await addToCartSchema.findOneAndUpdate(
@@ -309,7 +311,19 @@ module.exports = {
 	},
 	orderSuccess: async (req, res) => {
 		try {
-			await addToCartSchema.deleteMany({ userId: req.user._id })
+			const getCart = await addToCartSchema.find({ userId: req.user._id })
+			if (getCart.length > 0) {
+				/* for (i = 0; i < getCart.length; i++) {
+					await productSchema.findByIdAndUpdate(
+						getCart[i].productId,
+						{$inc:{quantity: -getCart[i].productQuantity}}
+					)
+					if(!await orderSchema.findOne({ cartId: getCart[i].cartId })){
+
+					  }
+				 }*/
+				await addToCartSchema.deleteMany({ userId: req.user._id })
+			}
 			return res
 				.status(enums.HTTP_CODE.OK)
 				.json({ success: true, message: messages.SUCCESS });
@@ -317,6 +331,18 @@ module.exports = {
 			return res
 				.status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
 				.json({ success: false, message: messages.INTERNAL_SERVER_ERROR });
+		}
+	},
+	getProductById: async (req, res) => {
+		try {
+			const product = await productSchema.findById(req.query.id)
+			return res
+				.status(enums.HTTP_CODE.OK)
+				.json({ success: true, product: product });
+		} catch (error) {
+			return res
+				.status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
+				.json({ success: false, message: error.message });
 		}
 	}
 

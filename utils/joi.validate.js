@@ -236,8 +236,8 @@ module.exports = {
             size: Joi.string().required(),
             shippingDays: Joi.string().required(),
             quantity: Joi.number().required(),
-            price: Joi.string().required(),
-            discPrice: Joi.string().required(),
+            price: Joi.number().required(),
+            discPrice: Joi.number().required(),
             image: Joi.string().required()
         });
 
@@ -261,8 +261,8 @@ module.exports = {
             size: Joi.string(),
             shippingDays: Joi.string(),
             quantity: Joi.number(),
-            price: Joi.string(),
-            discPrice: Joi.string(),
+            price: Joi.number(),
+            discPrice: Joi.number(),
             image: Joi.string()
         });
 
@@ -362,6 +362,22 @@ module.exports = {
         });
 
         let { error } = schema.validate(req.query);
+        if (error) {
+            return res
+                .status(enums.HTTP_CODE.BAD_REQUEST)
+                .json({ success: false, message: error.details[0].message });
+        } else {
+            next();
+        }
+    },
+    validatation4addReview: (req, res, next) => {
+        let schema = Joi.object().keys({
+            name: Joi.string().required(),
+            rating: Joi.number().required(),
+            review: Joi.string().required(),
+        });
+
+        let { error } = schema.validate(req.body);
         if (error) {
             return res
                 .status(enums.HTTP_CODE.BAD_REQUEST)

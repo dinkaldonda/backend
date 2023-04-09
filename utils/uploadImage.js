@@ -12,16 +12,15 @@ module.exports = {
                 .json({ success: false, message: messages.IMAGE_REQUIRE });
         }
         const productImage = req.files.image
-        if (!productImage.mimetype.startsWith("image")) {
+
+        const array_of_allowed_files = ['png', 'jpeg', 'jpg', 'webp'];
+        const file_extension = productImage.name.slice(
+            ((productImage.name.lastIndexOf('.') - 1) >>> 0) + 2
+        );
+        if (!array_of_allowed_files.includes(file_extension) || !productImage.mimetype.startsWith("image")) {
             return res
                 .status(enums.HTTP_CODE.BAD_REQUEST)
                 .json({ success: false, message: messages.INVALID_FILE_TYPE });
-        }
-        const maxFileSize = 1024 * 1024;
-        if (productImage.size > maxFileSize) {
-            return res
-                .status(enums.HTTP_CODE.BAD_REQUEST)
-                .json({ success: false, message: messages.INVALID_FILE_SIZE });
         }
         try {
             const fileResult = await cloudinary.uploader.upload(

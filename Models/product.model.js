@@ -11,8 +11,8 @@ const productSchema = new mongoose.Schema(
 		size: { type: String, required: true },
 		shippingDays: { type: String, required: true },
 		quantity: { type: Number, default: 0, required: true },
-		price: { type: String, required: true },
-		discPrice: { type: String, required: true },
+		price: { type: Number, required: true },
+		discPrice: { type: Number, required: true },
 		image: { type: String, required: true },
 		status: { type: String, default: "Pending" },
 		isPurchase: { type: Boolean, default: false }

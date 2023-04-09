@@ -9,6 +9,7 @@ const {
 
 router.post("/add-product", authVendor, validatation4addproduct, productController.addProduct)
 router.post("/get-product", authUser, productController.getProduct)
+router.get("/getProductById", authVendor, productController.getProductById)
 router.put("/update-product", authVendor, validatation4updateproduct, productController.updateProduct)
 router.delete("/delete-product", authVendor, productController.deleteProduct)
 router.post("/buy-product", productController.buyProduct)

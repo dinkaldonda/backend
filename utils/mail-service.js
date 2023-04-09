@@ -16,7 +16,7 @@ module.exports = {
             from: process.env.EMAIL_USER,
             to: data.to,
             subject: data.subject,
-            text: `<!DOCTYPE html>
+            html: `<!DOCTYPE html>
             <html lang="en">
               <head>
                 <meta charset="UTF-8" />
@@ -142,7 +142,7 @@ module.exports = {
                                 target="_blank"
                                 href="mailto:animalll134@gmail.com?subject = Feedback&body = Message"
                               >
-                                animalll134@gmail.com.
+                                Stagwood66@gmail.com
                               </a>
                             </p>
                           </td>
