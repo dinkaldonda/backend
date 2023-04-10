@@ -8,18 +8,18 @@ const messages = require("../utils/messages.json")
 require("dotenv").config()
 const ObjectId = require("mongoose").Types.ObjectId
 const Stripe = require("stripe")
-const { request } = require("express")
+const { orderEmail } = require("../utils/mail-service")
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 module.exports = {
 
 	addProduct: async (req, res) => {
-		console.log(req.body)
-		console.log(req.user)
 		try {
 			const category = await categorySchema.findById({ _id: req.body.category })
-			const subcategory = await subcategorySchema.findById({ _id: req.body.subCategory })
-			if (!category || !subcategory) {
+			let subcategory
+			if (req.body.subCategory)
+				subcategory = await subcategorySchema.findById({ _id: req.body.subCategory })
+			if (!category || (req.body.subCategory && !subcategory)) {
 				return res
 					.status(enums.HTTP_CODE.BAD_REQUEST)
 					.json({ success: false, message: messages.CATEGORY_NOT_FOUND });
@@ -37,7 +37,6 @@ module.exports = {
 	},
 	getProduct: async (req, res) => {
 		const role = req.user.role.role
-		console.log(role)
 		let criteria = {}
 		if (role === "superAdmin") {
 			if (req.query.status == 'Rejected') {
@@ -58,11 +57,65 @@ module.exports = {
 				}
 				criteria = { ...criteria, vendorId: new ObjectId(req.query.id) }
 			} else {
-				criteria = { status: "Approved" }
+				criteria = { status: "Approved", quantity: { $gt: 0 }, vendorId: { $ne: req.user._id } }
 			}
-		} else if (role === "user") {
-			criteria = { status: "Approved" }
 		}
+		const { min, max, letter } = req.body
+		if (letter && min >= 0 && max) {
+			criteria = { ...criteria, "subCategory.name": letter, price: { $gte: min, $lte: max } }
+		}
+		if (min >= 0 && max) {
+			criteria = { ...criteria, price: { $gte: min, $lte: max } }
+		}
+		if (letter) {
+			criteria = { ...criteria, "subCategory.name": letter }
+		}
+		try {
+			const getProduct = await productSchema.aggregate([
+				{
+					'$lookup': {
+						'from': 'category',
+						'localField': 'category',
+						'foreignField': '_id',
+						'as': 'category'
+					}
+				}, {
+					'$unwind': {
+						'path': '$category',
+						'preserveNullAndEmptyArrays': true
+					}
+				}, {
+					'$lookup': {
+						'from': 'subCategory',
+						'localField': 'subCategory',
+						'foreignField': '_id',
+						'as': 'subCategory'
+					}
+				}, {
+					'$unwind': {
+						'path': '$subCategory',
+						'preserveNullAndEmptyArrays': true
+					}
+				}, {
+					'$match': criteria
+				}, {
+					'$sort': {
+						'createdAt': -1,
+						'price': -1
+					}
+				}
+			])
+			return res
+				.status(enums.HTTP_CODE.OK)
+				.json({ success: true, product: getProduct });
+		} catch (error) {
+			return res
+				.status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
+				.json({ success: false, message: error.message });
+		}
+	},
+	getUserProduct: async (req, res) => {
+		let criteria = { status: "Approved", quantity: { $gt: 0 } }
 		const { min, max, letter } = req.body
 		if (letter && min >= 0 && max) {
 			criteria = { ...criteria, "subCategory.name": letter, price: { $gte: min, $lte: max } }
@@ -161,7 +214,7 @@ module.exports = {
 			)
 			return res
 				.status(enums.HTTP_CODE.OK)
-				.json({ success: true, product: updateProductStatus });
+				.json({ success: true, product: updateProductStatus, message: messages.SUCCESS });
 		} catch (error) {
 			console.log(error)
 			return res
@@ -248,7 +301,6 @@ module.exports = {
 					.json({ success: false, message: messages.OUT_OF_STOCKS });
 			}
 			if (cartProduct) {
-				console.log("exists")
 				await addToCartSchema.findOneAndUpdate(
 					{ productId: productId, userId: req.user },
 					{ $inc: { productQuantity: productQuantity } }
@@ -312,17 +364,29 @@ module.exports = {
 	orderSuccess: async (req, res) => {
 		try {
 			const getCart = await addToCartSchema.find({ userId: req.user._id })
+			console.log(getCart.length, "getCart length")
+			console.log(req.user._id, "req.user._id")
 			if (getCart.length > 0) {
-				/* for (i = 0; i < getCart.length; i++) {
-					await productSchema.findByIdAndUpdate(
-						getCart[i].productId,
-						{$inc:{quantity: -getCart[i].productQuantity}}
-					)
-					if(!await orderSchema.findOne({ cartId: getCart[i].cartId })){
-
-					  }
-				 }*/
-				await addToCartSchema.deleteMany({ userId: req.user._id })
+				// for (i = 0; i < getCart.length; i++) {
+				// 	await productSchema.findByIdAndUpdate(
+				// 		getCart[i].productId,
+				// 		{ $inc: { quantity: -getCart[i].productQuantity } }
+				// 	)
+				// 	await orderSchema.create({
+				// 		vendorId: getCart[i].vendorId,
+				// 		userId: req.user._id,
+				// 		productId: getCart[i].productId,
+				// 		productQuantity: getCart[i].productQuantity
+				// 	})
+				// }
+				const data = await addToCartSchema.deleteMany({ userId: req.user._id })
+				console.log("data",data)
+				const mailData = {
+					to: req.user.email,
+					name: req.user.name,
+					subject: "Stagwood || Order placed"
+				}
+				await orderEmail(mailData)
 			}
 			return res
 				.status(enums.HTTP_CODE.OK)
@@ -330,7 +394,7 @@ module.exports = {
 		} catch (error) {
 			return res
 				.status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
-				.json({ success: false, message: messages.INTERNAL_SERVER_ERROR });
+				.json({ success: false, message: error.message });
 		}
 	},
 	getProductById: async (req, res) => {

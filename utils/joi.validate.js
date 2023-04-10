@@ -235,9 +235,9 @@ module.exports = {
             material: Joi.string().required(),
             size: Joi.string().required(),
             shippingDays: Joi.string().required(),
-            quantity: Joi.number().required(),
-            price: Joi.number().required(),
-            discPrice: Joi.number().required(),
+            quantity: Joi.number().min(1).required(),
+            price: Joi.number().min(1).required(),
+            discPrice: Joi.number().min(1).required(),
             image: Joi.string().required()
         });
 
@@ -260,9 +260,9 @@ module.exports = {
             material: Joi.string(),
             size: Joi.string(),
             shippingDays: Joi.string(),
-            quantity: Joi.number(),
-            price: Joi.number(),
-            discPrice: Joi.number(),
+            quantity: Joi.number().min(1),
+            price: Joi.number().min(1),
+            discPrice: Joi.number().min(1),
             image: Joi.string()
         });
 
