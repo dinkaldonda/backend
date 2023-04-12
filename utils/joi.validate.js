@@ -255,7 +255,7 @@ module.exports = {
         let schema = Joi.object().keys({
             name: Joi.string(),
             category: Joi.string(),
-            subCategory: Joi.string(),
+            subCategory: Joi.any(),
             desc: Joi.string(),
             material: Joi.string(),
             size: Joi.string(),

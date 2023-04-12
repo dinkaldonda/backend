@@ -17,4 +17,5 @@ router.post("/buy-product", productController.buyProduct)
 router.post("/addToCart", authUser, productController.addToCart)
 router.get("/getCartProduct", authUser, productController.getCartProduct)
 router.post("/orderSuccess", authUser, productController.orderSuccess)
+router.get("/getOrder", authUser, productController.getOrder)
 module.exports = router

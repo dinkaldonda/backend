@@ -4,6 +4,7 @@ const addtocartModel = new mongoose.Schema(
 	{
 		productId: { type: mongoose.Schema.Types.ObjectId, ref: "product", required: true },
 		userId: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
+		vendorId: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
 		productQuantity: { type: Number, required: true }
 	},
 	{

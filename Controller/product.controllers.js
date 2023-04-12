@@ -15,15 +15,6 @@ module.exports = {
 
 	addProduct: async (req, res) => {
 		try {
-			const category = await categorySchema.findById({ _id: req.body.category })
-			let subcategory
-			if (req.body.subCategory)
-				subcategory = await subcategorySchema.findById({ _id: req.body.subCategory })
-			if (!category || (req.body.subCategory && !subcategory)) {
-				return res
-					.status(enums.HTTP_CODE.BAD_REQUEST)
-					.json({ success: false, message: messages.CATEGORY_NOT_FOUND });
-			}
 			const create = await productSchema.create({ ...req.body, vendorId: req.user._id })
 			return res
 				.status(enums.HTTP_CODE.OK)
@@ -59,6 +50,8 @@ module.exports = {
 			} else {
 				criteria = { status: "Approved", quantity: { $gt: 0 }, vendorId: { $ne: req.user._id } }
 			}
+		} else if (role === "user") {
+			criteria = { status: "Approved", quantity: { $gt: 0 }, vendorId: { $ne: req.user._id } }
 		}
 		const { min, max, letter } = req.body
 		if (letter && min >= 0 && max) {
@@ -310,6 +303,7 @@ module.exports = {
 					.json({ success: true, message: messages.PRODUCT_INCREMENT + ' ' + productQuantity });
 			} else {
 				req.body.userId = req.user._id
+				req.body.vendorId = findProduct.vendorId
 				await addToCartSchema.create(req.body)
 				return res
 					.status(enums.HTTP_CODE.OK)
@@ -364,23 +358,26 @@ module.exports = {
 	orderSuccess: async (req, res) => {
 		try {
 			const getCart = await addToCartSchema.find({ userId: req.user._id })
-			console.log(getCart.length, "getCart length")
 			console.log(req.user._id, "req.user._id")
 			if (getCart.length > 0) {
-				// for (i = 0; i < getCart.length; i++) {
-				// 	await productSchema.findByIdAndUpdate(
-				// 		getCart[i].productId,
-				// 		{ $inc: { quantity: -getCart[i].productQuantity } }
-				// 	)
-				// 	await orderSchema.create({
-				// 		vendorId: getCart[i].vendorId,
-				// 		userId: req.user._id,
-				// 		productId: getCart[i].productId,
-				// 		productQuantity: getCart[i].productQuantity
-				// 	})
-				// }
+				for (i = 0; i < getCart.length; i++) {
+					console.log(getCart.length, "getCart length")
+					const data = {
+						vendorId: getCart[i].vendorId,
+						userId: req.user._id,
+						productId: getCart[i].productId,
+						productQuantity: getCart[i].productQuantity
+					}
+					console.log(data, "data")
+					const order = await orderSchema.create(data)
+					console.log(order, "order")
+					await productSchema.findByIdAndUpdate(
+						getCart[i].productId,
+						{ $inc: { quantity: -getCart[i].productQuantity } }
+					)
+				}
 				const data = await addToCartSchema.deleteMany({ userId: req.user._id })
-				console.log("data",data)
+				console.log("data", data)
 				const mailData = {
 					to: req.user.email,
 					name: req.user.name,
@@ -403,6 +400,79 @@ module.exports = {
 			return res
 				.status(enums.HTTP_CODE.OK)
 				.json({ success: true, product: product });
+		} catch (error) {
+			return res
+				.status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
+				.json({ success: false, message: error.message });
+		}
+	},
+	getOrder: async (req, res) => {
+		try {
+			const role = req.user.role.role
+			let criteria = { userId: req.user._id }
+			if (role == "superAdmin") criteria = {}
+			const getOrder = await orderSchema.aggregate([
+				{ $match: criteria },
+				{
+					$lookup: {
+						from: "product",
+						localField: "productId",
+						foreignField: "_id",
+						as: "productId",
+					},
+				},
+				{
+					$unwind: {
+						path: "$productId",
+						preserveNullAndEmptyArrays: true,
+					},
+				},
+				{
+					$lookup: {
+						from: "user",
+						localField: "userId",
+						foreignField: "_id",
+						as: "userId",
+					},
+				},
+				{
+					$unwind: {
+						path: "$userId",
+						preserveNullAndEmptyArrays: true,
+					},
+				},
+				{
+					$lookup: {
+						from: "category",
+						localField: "productId.category",
+						foreignField: "_id",
+						as: "category",
+					},
+				},
+				{
+					$unwind: {
+						path: "$category",
+						preserveNullAndEmptyArrays: true,
+					},
+				},
+				{
+					$lookup: {
+						from: "subCategory",
+						localField: "productId.subCategory",
+						foreignField: "_id",
+						as: "subCategory",
+					},
+				},
+				{
+					$unwind: {
+						path: "$subCategory",
+						preserveNullAndEmptyArrays: true,
+					},
+				},
+			])
+			return res
+				.status(enums.HTTP_CODE.OK)
+				.json({ success: true, message: messages.SUCCESS, getOrder: getOrder });
 		} catch (error) {
 			return res
 				.status(enums.HTTP_CODE.INTERNAL_SERVER_ERROR)
